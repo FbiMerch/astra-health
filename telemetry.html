@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Telemetry</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li class="active"><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header><div class="mission-info">Fluxuri Biometrice in Timp Real</div></header>
+    <div class="dashboard-container">
+        <div class="panel-box">
+            <div class="panel-title">Istoric Extins Senzori (Astroskin / Bio-Harness)</div>
+            <div class="chart-wrapper" style="height: 400px; margin-top: 15px;">
+                <canvas id="vitalsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

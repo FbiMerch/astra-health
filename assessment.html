@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Self-Assessment Center</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        .local-storage-notice {
+            background: rgba(0, 240, 255, 0.08); border: 1px solid var(--accent-cyan); color: var(--accent-cyan);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .emergency-banner {
+            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red);
+            padding: 12px 15px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; display: none;
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 1rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .form-group label { font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+        .form-group span.help { font-size: 0.75rem; color: var(--text-muted); }
+        .form-group input, .form-group select, .form-group textarea {
+            background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px; border-radius: 4px; font-size: 0.9rem; outline: none;
+        }
+
+        .symptom-category h4 { font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 8px; text-transform: uppercase; font-family: var(--font-tech); }
+        .symptoms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+        .symptom-checkbox { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; background: var(--bg-primary); padding: 8px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-color); }
+        .symptom-checkbox input { accent-color: var(--accent-cyan); width: 16px; height: 16px; }
+
+        .btn-action {
+            background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: opacity 0.2s; width: fit-content;
+        }
+        .btn-action:hover { opacity: 0.85; }
+
+        .summary-card { background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .history-row {
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);
+            padding: 12px 15px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem;
+            transition: border-color 0.2s; cursor: pointer;
+        }
+        .history-row:hover { border-color: var(--accent-cyan); }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li class="active"><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Self-Assessment Center</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Stocare Locală Notificare -->
+        <div class="local-storage-notice">
+            <span>💾 PERSISTENȚĂ LOCALĂ: Evaluările sunt salvate local pe acest dispozitiv în browser (`localStorage`) și nu sunt sincronizate cu niciun server extern.</span>
+            <span id="storageCountBadge" style="font-weight: bold;">0 salvate</span>
+        </div>
+
+        <div class="emergency-banner" id="emergencyBanner">
+            🚨 ATENȚIE: Ați selectat simptome cu potențial critic. Urmați protocolul medical al misiunii!
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="panel-box" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2 style="font-size: 1.3rem; color: var(--accent-cyan); font-family: var(--font-tech);">SELF-ASSESSMENT CENTER</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Monitor your health. Understand your body. Take action.</p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="font-size: 0.85rem;">Ultima evaluare: <strong id="lastAssessmentTime" style="color: var(--text-main);">Niciuna</strong></div>
+                <button class="btn-action" id="startNewBtn">START NEW ASSESSMENT</button>
+            </div>
+        </div>
+
+        <!-- FORMULAR -->
+        <div class="panel-box" id="assessmentFormContainer" style="display: none;">
+            <div class="panel-title"><span>Formular Nou de Autoevaluare</span></div>
+
+            <form id="selfAssessmentForm" style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 10px;">1. Parametri Fiziologici (Vital Signs)</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="inputHeartRate">Heart Rate (BPM)</label>
+                            <input type="number" id="inputHeartRate" placeholder="ex: 72" min="30" max="220">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputSysBP">Blood Pressure - Systolic (mmHg)</label>
+                            <input type="number" id="inputSysBP" placeholder="ex: 120" min="60" max="250">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputDiaBP">Blood Pressure - Diastolic (mmHg)</label>
+                            <input type="number" id="inputDiaBP" placeholder="ex: 80" min="40" max="150">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputTemp">Body Temperature (°C)</label>
+                            <input type="number" step="0.1" id="inputTemp" placeholder="ex: 36.6" min="34" max="42">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputGlucose">Blood Glucose (mg/dL) - Opțional</label>
+                            <input type="number" id="inputGlucose" placeholder="ex: 95" min="40" max="500">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 10px;">2. Somn și Recuperare</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="inputSleepHours">Durată Somn (Ore)</label>
+                            <input type="number" step="0.5" id="inputSleepHours" placeholder="ex: 7.5" min="0" max="24">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputSleepQuality">Calitatea Somnului</label>
+                            <select id="inputSleepQuality">
+                                <option value="Very Poor">Very Poor</option>
+                                <option value="Poor">Poor</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Good" selected>Good</option>
+                                <option value="Excellent">Excellent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputSleepInterruptions">Întreruperi</label>
+                            <input type="number" id="inputSleepInterruptions" placeholder="ex: 1" min="0" max="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputFatigue">Nivel Oboseală</label>
+                            <select id="inputFatigue">
+                                <option value="Low" selected>Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High">High</option>
+                                <option value="Very High">Very High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 10px;">3. Stare Emoțională & Psihologică</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="inputMood">Dispoziție Curentă</label>
+                            <select id="inputMood">
+                                <option value="Very Bad">Very Bad 😞</option>
+                                <option value="Bad">Bad 🙁</option>
+                                <option value="Neutral" selected>Neutral 😐</option>
+                                <option value="Good">Good 🙂</option>
+                                <option value="Very Good">Very Good 😄</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputStress">Nivel Stres</label>
+                            <select id="inputStress">
+                                <option value="Low" selected>Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High">High</option>
+                                <option value="Very High">Very High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputMotivation">Motivație</label>
+                            <select id="inputMotivation">
+                                <option value="Low">Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High" selected>High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputNotes">Observații Personale</label>
+                            <textarea id="inputNotes" rows="2" placeholder="Note..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 10px;">4. Simptome</h3>
+                    <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="inputSeverity">Severitate</label>
+                            <select id="inputSeverity">
+                                <option value="None" selected>Niciun simptom / Normal</option>
+                                <option value="Mild">Mild</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="inputDuration">Durată</label>
+                            <input type="text" id="inputDuration" placeholder="ex: de 2 ore">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                        <div class="symptom-category">
+                            <h4>Cardiovascular</h4>
+                            <div class="symptoms-grid">
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Chest discomfort"> Chest discomfort</label>
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Palpitations"> Palpitations</label>
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Dizziness"> Dizziness</label>
+                            </div>
+                        </div>
+                        <div class="symptom-category">
+                            <h4>Neurological</h4>
+                            <div class="symptoms-grid">
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Headache"> Headache</label>
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Difficulty concentrating"> Difficulty concentrating</label>
+                            </div>
+                        </div>
+                        <div class="symptom-category">
+                            <h4>Musculoskeletal</h4>
+                            <div class="symptoms-grid">
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Muscle pain"> Muscle pain</label>
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Joint pain"> Joint pain</label>
+                            </div>
+                        </div>
+                        <div class="symptom-category">
+                            <h4>General</h4>
+                            <div class="symptoms-grid">
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Nausea"> Nausea</label>
+                                <label class="symptom-checkbox"><input type="checkbox" name="symptom" value="Shortness of breath"> Shortness of breath</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-action" style="background: var(--accent-green); color: var(--bg-primary);">SUBMIT ASSESSMENT</button>
+            </form>
+        </div>
+
+        <!-- REZUMAT -->
+        <div class="panel-box" id="assessmentSummaryContainer" style="display: none;">
+            <div class="panel-title"><span>Detalii / Rezumat Evaluare</span><strong id="summaryStatusBadge" style="color: var(--accent-green);">NORMAL</strong></div>
+            <div id="summaryContentBody" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            <button class="btn-action" id="backToAssessmentListBtn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">Închide Detalii</button>
+        </div>
+
+        <!-- ISTORIC -->
+        <div class="panel-box">
+            <div class="panel-title">Istoric Evaluări Salvate Local (LocalStorage)</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="historyListContainer"></div>
+        </div>
+
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/assessment.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

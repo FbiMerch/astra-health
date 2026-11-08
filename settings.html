@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Settings</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li class="active"><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header><div class="mission-info">Configurare Sistem</div></header>
+    <div class="dashboard-container">
+        <div class="panel-box" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-title">Setări Conectivitate Spring Boot</div>
+            <p style="font-size:.85rem;color:var(--text-muted);line-height:1.5;">Integrarea API este disponibilă doar pentru fluxurile conectate din Dashboard. Celelalte module păstrează datele local și afișează exemple demonstrative; endpoint-ul Spring Boot trebuie implementat și autentificat înainte de utilizare cu date reale.</p>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 12px; border-radius: 6px; cursor: pointer;">
+                    <span>Activează Modul API (Spring Boot Backend)</span>
+                    <input type="checkbox" id="settingsApiToggle" style="transform: scale(1.2);">
+                </label>
+                <div style="background: var(--bg-card); padding: 12px; border-radius: 6px;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">API Base URL</label>
+                    <input type="text" value="http://localhost:8080/api" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 4px;" disabled>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

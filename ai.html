@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - AI Companion</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li class="active"><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span id="missionName">ARTEMIS-IV</span> | MAITRI AI Companion</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">⚠️ MAITRI este un demo cu răspunsuri prestabilite; nu analizează date clinice și nu oferă diagnostic sau recomandări medicale.</div>
+
+        <div class="panel-box" style="flex-grow: 1; min-height: 450px; display: flex; flex-direction: column;">
+            <div class="panel-title">Sesiune de Chat MAITRI (Asistent de Bord)</div>
+
+            <div id="chatContainer" style="flex-grow: 1; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; overflow-y: auto; max-height: 380px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; margin-bottom: 15px;">
+                <div style="color: var(--accent-cyan); background: rgba(0,240,255,0.05); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    MAITRI: Salut! Sunt asistentul tău virtual de misiune. Întreabă-mă despre starea ta, telemetrie sau alertele active din sistem.
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="chatInput" placeholder="Scrie un mesaj către MAITRI (ex: 'Care sunt alertele mele active?')..." style="flex-grow: 1; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 6px; outline: none;">
+                <button id="sendChatBtn" style="background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Trimite</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ai-companion.js"></script>
+<!-- Script actualizat cu logica de Smart Alerts pentru MAITRI -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const sendBtn = document.getElementById("sendChatBtn");
+        if (sendBtn && sendBtn.dataset.maitriBound === "true") return;
+        const input = document.getElementById("chatInput");
+        const container = document.getElementById("chatContainer");
+        const astronautId = "ast-01";
+
+        function getAiResponseWithAlerts(userQuery) {
+            const stored = localStorage.getItem(`astra_smart_alerts_${astronautId}`);
+            let activeAlerts = [];
+
+            if (stored) {
+                try {
+                    activeAlerts = JSON.parse(stored).filter(a => a.status !== "RESOLVED");
+                } catch(e) {}
+            }
+
+            const query = userQuery.toLowerCase();
+
+            if (query.includes("alerta") || query.includes("status") || query.includes("problema") || query.includes("stare")) {
+                if (activeAlerts.length === 0) {
+                    return "MAITRI: Analizând baza de date centralizată, toate sistemele și parametrii tăi sunt nominali. Nu există alerte active în acest moment.";
+                } else {
+                    let summary = `MAITRI: Am detectat ${activeAlerts.length} alerte active în sistem:\n`;
+                    activeAlerts.forEach(a => {
+                        summary += `• [${a.severity}] ${a.title}: ${a.description} (Acțiune recomandată: ${a.recommendedSteps})\n`;
+                    });
+                    return summary;
+                }
+            }
+
+            return "MAITRI: Sunt aici să te sprijin în misiune. Dacă întâmpini disconfort sau ai nevoie de detalii despre telemetrie și alerte, întreabă-mă oricând.";
+        }
+
+        function handleUserMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            const userDiv = document.createElement("div");
+            userDiv.style.cssText = "color: var(--text-main); text-align: right; background: var(--bg-card); padding: 8px 12px; border-radius: 6px; align-self: flex-end; max-width: 80%;";
+            userDiv.textContent = text;
+            container.appendChild(userDiv);
+
+            input.value = "";
+            container.scrollTop = container.scrollHeight;
+
+            setTimeout(() => {
+                const aiText = getAiResponseWithAlerts(text);
+                const aiDiv = document.createElement("div");
+                aiDiv.style.cssText = "color: var(--accent-cyan); white-space: pre-line; background: rgba(0,240,255,0.05); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); max-width: 90%;";
+                aiDiv.textContent = aiText;
+                container.appendChild(aiDiv);
+                container.scrollTop = container.scrollHeight;
+            }, 500);
+        }
+
+        if (sendBtn && input) {
+            sendBtn.addEventListener("click", handleUserMessage);
+            input.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") handleUserMessage();
+            });
+        }
+    });
+</script>
+<script src="js/auth.js"></script>
+</body>
+</html>

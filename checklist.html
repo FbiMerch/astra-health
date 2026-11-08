@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Daily Health Checklist</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 1rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .checklist-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-card); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--border-color);
+            font-size: 0.85rem; transition: border-color 0.2s;
+        }
+        .checklist-item.done { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.03); }
+        .checklist-item.done span.task-title { text-decoration: line-through; color: var(--text-muted); }
+
+        .form-grid { display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; }
+        .form-group input, .form-group select {
+            background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%;
+        }
+
+        .btn-action {
+            background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; width: fit-content; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.85; }
+
+        .progress-bar-container { width: 100%; background: var(--bg-primary); border-radius: 4px; height: 10px; border: 1px solid var(--border-color); overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.3s ease; }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">👤 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li class="active"><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Daily Health Checklist</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">
+            ⚠️ MISSION DAY ROUTINE: Progresul se calculează dinamic în raport cu toate activitățile programate și obiectivele personalizate adăugate.
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="panel-box" style="background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(0,240,255,0.03) 100%);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--accent-cyan); font-family: var(--font-tech);">MISSION DAY 042</div>
+                    <h2 style="font-size: 1.4rem; color: var(--text-main); margin-top: 2px;">Daily Health Objectives</h2>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="background: var(--bg-card); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Current Streak</div>
+                        <div style="font-size: 1.1rem; font-weight: bold; color: var(--accent-orange);" id="streakVal">7 days 🔥</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Weekly Goal</div>
+                        <div style="font-size: 1.1rem; font-weight: bold; color: var(--accent-green);" id="weeklyGoalVal">5 / 7 days</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span id="progressMessage" style="color: var(--accent-cyan);">Great start! Keep following your health routine.</span>
+                    <strong id="progressPercentageVal">75% Complete</strong>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD CUSTOM OBJECTIVE / TASK FORM -->
+        <div class="panel-box">
+            <div class="panel-title">Adaugă Obiectiv sau Activitate Personalizată</div>
+            <form id="customTaskForm" class="form-grid">
+                <div class="form-group">
+                    <input type="text" id="customTaskTitle" placeholder="ex: Calibrare suplimentară senzor mediu..." required>
+                </div>
+                <div class="form-group">
+                    <select id="customTaskCategory">
+                        <option value="Medical">Medical</option>
+                        <option value="Mental Wellbeing">Mental Wellbeing</option>
+                        <option value="Nutrition">Nutrition & Hydration</option>
+                        <option value="Physical Activity">Physical Activity</option>
+                        <option value="Custom Task" selected>Custom Task (General)</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="btn-action" style="background: var(--accent-green); color: var(--bg-primary); height: 100%;">Adaugă în Listă</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TASKS LIST -->
+        <div class="panel-box">
+            <div class="panel-title"><span>Activități Programate & Personale pentru Astăzi</span></div>
+            <div style="display: flex; flex-direction: column; gap: 12px;" id="tasksContainer">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+        <!-- EMOTIONAL CHECK-IN -->
+        <div class="panel-box">
+            <div class="panel-title">Check-in Emoțional & Stare Generală (Mental Wellbeing)</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;" id="emotionalCheckinBox">
+                <div class="form-group" style="background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <label style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;">Dispoziție Curentă (Mood)</label>
+                    <select id="checkinMood" style="background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 4px; margin-top: 6px; width: 100%;">
+                        <option value="Very Bad">Very Bad 😞</option>
+                        <option value="Bad">Bad 🙁</option>
+                        <option value="Neutral">Neutral 😐</option>
+                        <option value="Good" selected>Good 🙂</option>
+                        <option value="Very Good">Very Good 😄</option>
+                    </select>
+                </div>
+                <div class="form-group" style="background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <label style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;">Nivel Stres</label>
+                    <select id="checkinStress" style="background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 4px; margin-top: 6px; width: 100%;">
+                        <option value="Low" selected>Low</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="btn-action" id="saveCheckinBtn" style="background: var(--accent-cyan); color: var(--bg-primary); width: 100%;">Salvează Check-in</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="panel-box">
+            <div class="panel-title">Istoric Zile Anterioare & Consecvență</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="historyChecklistContainer">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Sesiunea curentă înregistrează activitățile în timp real.</div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/checklist.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

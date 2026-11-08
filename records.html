@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Medical Records & Reports</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 1rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .metric-card { background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px; }
+        .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .metric-val { font-size: 1.4rem; font-weight: bold; font-family: var(--font-tech); color: var(--accent-cyan); }
+
+        .btn-action {
+            background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; width: fit-content; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.85; }
+
+        .timeline-item {
+            background: var(--bg-card); padding: 12px 15px; border-radius: 6px; border-left: 3px solid var(--accent-cyan); font-size: 0.85rem;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-family: var(--font-tech); }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .form-group label { font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea {
+            background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%;
+        }
+
+        .chart-wrapper { position: relative; height: 260px; width: 100%; }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">👤 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li class="active"><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Central Medical Records & Reports</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">
+            ⚠️ DOSAR LOCAL DE DEMO: Afișează înregistrări manuale ale contului curent și exemple demonstrative. Nu este dosar clinic oficial și nu înlocuiește sistemul medical autorizat.
+        </div>
+
+        <!-- 1. MEDICAL OVERVIEW -->
+        <div class="panel-box">
+            <div class="panel-title">Medical Overview (Sumar Dosar)</div>
+            <div class="overview-grid" id="medicalOverviewGrid">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+        <!-- 4. SYMPTOMS & OBSERVATIONS REPORTING -->
+        <div class="panel-box">
+            <div class="panel-title">Înregistrare Simptome & Observații (Symptoms & Observations)</div>
+            <form id="symptomForm" style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="symptomType">Tip Simptom</label>
+                        <select id="symptomType">
+                            <option value="Headache">Headache (Cefalee)</option>
+                            <option value="Fatigue">Fatigue (Oboseală)</option>
+                            <option value="Dizziness">Dizziness (Amețeală)</option>
+                            <option value="Nausea">Nausea (Greață)</option>
+                            <option value="Sleep Disturbances">Sleep Disturbances</option>
+                            <option value="Muscle Pain">Muscle Pain</option>
+                            <option value="Other">Other Symptom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="symptomIntensity">Intensitate (1 - 10)</label>
+                        <input type="number" id="symptomIntensity" min="1" max="10" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="symptomDuration">Durată Estimată</label>
+                        <input type="text" id="symptomDuration" placeholder="ex: 45 minute" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="symptomDesc">Descriere & Măsuri Luate</label>
+                    <textarea id="symptomDesc" rows="2" placeholder="Detalii suplimentare despre context sau ameliorare..." required></textarea>
+                </div>
+                <button type="submit" class="btn-action">ÎNREGISTREAZĂ SIMPTOMUL ÎN DOSAR</button>
+            </form>
+        </div>
+
+        <!-- 2. MEDICAL MEASUREMENTS HISTORY TABLE -->
+        <div class="panel-box">
+            <div class="panel-title">
+                <span>Istoric Măsurători Medicale (Unified Measurements)</span>
+                <select id="measurementFilter" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;">
+                    <option value="ALL">Toate tipurile</option>
+                    <option value="Blood Pressure">Blood Pressure</option>
+                    <option value="Heart Rate">Heart Rate</option>
+                    <option value="Temperature">Temperature</option>
+                    <option value="SpO2">SpO₂</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Tip Măsurătoare</th>
+                        <th>Valoare</th>
+                        <th>Unitate</th>
+                        <th>Data / Ora (UTC)</th>
+                        <th>Sursă & Modul</th>
+                    </tr>
+                    </thead>
+                    <tbody id="measurementsTableBody">
+                    <!-- Populat din JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. HEALTH TRENDS & ANALYSIS CHARTS -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="panel-box">
+                <div class="panel-title">Evoluție Puls & SpO₂ (Trends)</div>
+                <div class="chart-wrapper">
+                    <canvas id="trendsChart1"></canvas>
+                </div>
+            </div>
+            <div class="panel-box">
+                <div class="panel-title">Evoluție Temperatură & Glicemie</div>
+                <div class="chart-wrapper">
+                    <canvas id="trendsChart2"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MEDICAL EVENTS TIMELINE -->
+        <div class="panel-box">
+            <div class="panel-title">Medical Timeline (Cronologia Evenimentelor Misiunii)</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="timelineContainer">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+        <!-- 7. MEDICAL REPORTS & EXPORT -->
+        <div class="panel-box" style="border-left: 4px solid var(--accent-cyan);">
+            <div class="panel-title" style="color: var(--accent-cyan);">Generare & Export Rapoarte Medicale (Medical Reports)</div>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div class="form-group" style="flex-grow: 1; min-width: 220px; margin: 0;">
+                    <label for="reportTypeSelect">Tip Raport</label>
+                    <select id="reportTypeSelect">
+                        <option value="daily">Daily Health Report</option>
+                        <option value="weekly">Weekly Health Report (Ultimele 7 zile)</option>
+                        <option value="mission">Mission Health Report (Complet)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button class="btn-action" id="exportPdfBtn" style="background: var(--accent-cyan);">Export PDF (Simulat)</button>
+                    <button class="btn-action" id="exportCsvBtn" style="background: var(--accent-green); color: var(--bg-primary);">Export CSV</button>
+                    <button class="btn-action" id="exportJsonBtn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">Export JSON</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/records.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

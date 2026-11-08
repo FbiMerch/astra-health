@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Mission Autonomy & Offline Center</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 1rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .status-badge {
+            padding: 5px 12px; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-tech); font-weight: bold; text-transform: uppercase;
+        }
+        .status-online { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .status-offline { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .status-syncing { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+
+        .badge-local { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; font-family: var(--font-tech); }
+        .badge-synced { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; font-family: var(--font-tech); }
+        .badge-pending { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; font-family: var(--font-tech); }
+
+        .btn-action {
+            background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; width: fit-content; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.85; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .log-row { background: var(--bg-card); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">👤 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li class="active"><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Mission Autonomy & Offline Center</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">
+            ⚠️ MOD DEMONSTRATIV: Datele sunt păstrate în stocarea locală a browserului. Nu sunt criptate aici și nu se sincronizează automat; endpoint-ul serverului nu este configurat.
+        </div>
+
+        <!-- 1. CONNECTION STATUS & 2. SYNC OVERVIEW -->
+        <div class="panel-box" style="background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(0,240,255,0.03) 100%);">
+            <div class="panel-title">
+                <span>Connection Status & Data Synchronization</span>
+                <span id="connectionBadge" class="status-badge status-online">ONLINE / LINK ACTIVE</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Ultima sincronizare</div>
+                    <div style="font-size: 1rem; font-weight: bold; color: var(--accent-yellow); margin-top: 5px;" id="lastSyncTime">Neconfigurată</div>
+                </div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Înregistrări Nesincronizate (Pending)</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-orange); margin-top: 5px;" id="pendingSyncCount">0 elemente</div>
+                </div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Ghiduri Offline Disponibile</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-cyan); margin-top: 5px;">14 Protocoale</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button class="btn-action" id="syncNowBtn">SYNC NOW (Sincronizează Acum)</button>
+                <button class="btn-action" id="toggleNetworkBtn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">Simulează Pierdere Conexiune (Toggle Offline)</button>
+            </div>
+        </div>
+
+        <!-- 3. OFFLINE MEDICAL LIBRARY & 5. EMERGENCY PROCEDURES -->
+        <div class="grid-2">
+            <div class="panel-box">
+                <div class="panel-title">Offline Medical Library (Ghiduri salvate)</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;" id="offlineLibraryContainer">
+                    <!-- Populat din JS -->
+                </div>
+            </div>
+            <div class="panel-box">
+                <div class="panel-title">Emergency Procedures (Urgențe Majore)</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;" id="emergencyProceduresContainer">
+                    <!-- Populat din JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. LOCAL MEDICAL RECORDS (Diferențiere: Saved Locally vs Synced) -->
+        <div class="panel-box">
+            <div class="panel-title">
+                <span>Istoric Medical Local & Status Sincronizare</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Baza de date locală (Persistent Storage)</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="localRecordsList">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+        <!-- 8. OFFLINE ACTIVITY LOG -->
+        <div class="panel-box">
+            <div class="panel-title">Offline Activity Log (Jurnalul acțiunilor fără conexiune)</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;" id="offlineActivityLogContainer">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/offline.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
+<li><a href="emergency.html">🚨 Emergency Center</a></li>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ASTRA Health - Exercise & Countermeasures</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .exercise-page { max-width: 1300px; width: 100%; margin: 0 auto; }
+        .overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:15px; }
+        .metric-val { font-size:1.35rem; font-weight:bold; font-family:var(--font-tech); color:var(--accent-cyan); }
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:15px; }
+        .form-group { display:flex; flex-direction:column; gap:6px; background:var(--bg-card); padding:12px; border-radius:6px; border:1px solid var(--border-color); }
+        .form-group label { font-size:.85rem; font-weight:600; }
+        .form-group input,.form-group select { background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-main); padding:9px; border-radius:4px; font-size:.9rem; }
+        .btn-action { background:var(--accent-cyan); color:var(--bg-primary); border:0; padding:10px 18px; border-radius:6px; font-weight:bold; cursor:pointer; width:fit-content; }
+        .chart-wrapper { position:relative; height:260px; width:100%; }
+        .exercise-columns { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .workout-row,.recommendation-item { background:var(--bg-card); padding:12px 15px; border-radius:6px; border:1px solid var(--border-color); font-size:.85rem; }
+        .recommendation-item { border-left:3px solid var(--accent-cyan); }
+        .subtle { color:var(--text-muted); font-size:.85rem; line-height:1.5; }
+        @media(max-width:900px) { aside { width:220px; padding:14px; } .exercise-columns { grid-template-columns:1fr; } }
+        @media(max-width:700px) { body { display:block; } aside { width:100%; } .nav-links { gap:2px; } main { height:auto; min-height:100vh; } header { padding:14px; gap:12px; flex-wrap:wrap; } .dashboard-container { padding:14px; } }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li class="active"><a href="exercise.html" aria-current="page">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box"><label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label></div>
+</aside>
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span id="missionName">ARTEMIS-IV LUNAR BASE</span> | Exercise & Countermeasures Center</div>
+        <div class="astronaut-selector"><select id="astronautSelect" aria-label="Selectează astronautul"></select></div>
+    </header>
+    <div class="dashboard-container exercise-page">
+        <div class="disclaimer-banner">⚠️ Datele și recomandările sunt orientative și nu înlocuiesc protocoalele medicale oficiale ale misiunii.</div>
+        <section class="panel-box" style="border-left:4px solid var(--accent-cyan);background:linear-gradient(135deg,var(--bg-secondary),rgba(0,240,255,.03))">
+            <div class="panel-title" style="color:var(--accent-cyan)">Microgravity Impact & Gravity Fields (Hazard NASA)</div>
+            <p class="subtle">În microgravitație, reducerea încărcării mecanice poate contribui la pierderea masei musculare și a densității minerale osoase. Exercițiile de rezistență și cardio sunt contramăsuri monitorizate în cadrul programelor de sănătate spațială. Datele afișate aici sunt demonstrative.</p>
+        </section>
+        <section class="panel-box"><div class="panel-title">Daily Exercise Overview (Obiectiv zilnic)</div><div class="overview-grid" id="dailyOverviewGrid" aria-live="polite"></div></section>
+        <section class="panel-box">
+            <div class="panel-title">Înregistrare antrenament nou (Cardio / Resistance)</div>
+            <form id="workoutLogForm" style="display:flex;flex-direction:column;gap:15px">
+                <div class="form-grid">
+                    <div class="form-group"><label for="logType">Tip antrenament</label><select id="logType"><option value="Resistance">Resistance Training (ARED)</option><option value="Cardio">Cardio Training (T2 / Cycle)</option></select></div>
+                    <div class="form-group"><label for="logName">Nume exercițiu / rutină</label><input id="logName" type="text" maxlength="100" placeholder="ex: Squats / Intervale T2" required></div>
+                    <div class="form-group"><label for="logDuration">Durată (minute)</label><input id="logDuration" type="number" min="5" max="180" step="1" placeholder="45" required></div>
+                    <div class="form-group"><label for="logIntensity">Intensitate</label><select id="logIntensity"><option value="Low">Low (Scăzută)</option><option value="Moderate" selected>Moderate (Medie)</option><option value="High">High (Ridicată)</option><option value="Max">Max (Maximă)</option></select></div>
+                    <div class="form-group"><label for="logDetails">Seturi / repetări sau puls mediu</label><input id="logDetails" type="text" maxlength="160" placeholder="ex: 4 seturi x 10 repetări / 145 bpm"></div>
+                </div>
+                <button type="submit" class="btn-action">ADAUGĂ ANTRENAMENTUL</button>
+            </form>
+        </section>
+        <div class="exercise-columns">
+            <section class="panel-box">
+                <div class="panel-title">Muscle Health Monitoring</div>
+                <p class="subtle">Indicator demonstrativ al tonusului muscular, separat de măsurători clinice reale.</p>
+                <div class="metric-card"><div class="metric-title">Forță relativă membre inferioare</div><div class="metric-val">94.5% din baseline terestru</div></div>
+                <div class="chart-wrapper" style="height:190px"><canvas id="muscleChart" aria-label="Grafic demonstrativ al tonusului muscular"></canvas></div>
+            </section>
+            <section class="panel-box">
+                <div class="panel-title">Bone Health Monitoring (BMD)</div>
+                <p class="subtle">Înregistrările de mai jos sunt simulate; evaluarea BMD necesită măsurători și interpretare medicală.</p>
+                <div class="metric-card"><div class="metric-title">Status măsurători osoase</div><div id="boneDensityVal" class="metric-val" style="font-size:1rem;color:var(--accent-yellow)">Nicio măsurătoare BMD disponibilă</div></div>
+                <button type="button" class="btn-action" id="simulateBoneScanBtn">Simulează scanare BMD</button>
+            </section>
+        </div>
+        <section class="panel-box"><div class="panel-title">Istoric antrenamente & progres (ultimele 7 zile)</div><div class="chart-wrapper"><canvas id="trainingHistoryChart" aria-label="Durata antrenamentelor pe categorii în ultimele șapte zile"></canvas></div></section>
+        <section class="panel-box"><div class="panel-title">Recomandări orientative de antrenament (HRP)</div><div id="exerciseRecommendationsList" style="display:flex;flex-direction:column;gap:10px" aria-live="polite"></div></section>
+        <section class="panel-box"><div class="panel-title">Jurnal antrenamente salvate local</div><div id="workoutHistoryList" style="display:flex;flex-direction:column;gap:10px"></div></section>
+    </div>
+</main>
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/exercise.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

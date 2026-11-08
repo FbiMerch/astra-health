@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Sign Up Portal</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .signup-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .logo-title { font-family: var(--font-tech); color: var(--accent-cyan); font-size: 1.2rem; text-align: center; letter-spacing: 1px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); }
+        .form-group input, .form-group select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .btn-submit {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 5px;
+            transition: opacity 0.2s;
+        }
+        .btn-submit:hover { opacity: 0.85; }
+        .links-row { text-align: center; font-size: 0.85rem; margin-top: 5px; }
+        .links-row a { color: var(--accent-cyan); text-decoration: none; }
+        .error-msg { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 8px; border-radius: 6px; font-size: 0.85rem; display: none; }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="signup-card">
+    <div class="logo-title">⚡ ASTRA HEALTH - CREARE CONT</div>
+    <div id="errorAlert" class="error-msg"></div>
+    <form id="signupForm" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="form-group">
+            <label for="fullName">Nume Complet</label>
+            <input type="text" id="fullName" required placeholder="ex: John Doe">
+        </div>
+        <div class="form-group">
+            <label for="email">Email Adresă</label>
+            <input type="email" id="email" required placeholder="ex: astronaut@astra.space">
+        </div>
+        <div class="form-group">
+            <label for="password">Parolă</label>
+            <input type="password" id="password" required minlength="12" autocomplete="new-password" placeholder="Minimum 12 caractere">
+        </div>
+        <div class="form-group">
+            <label for="crewId">Crew ID / Cod Astronaut</label>
+            <input type="text" id="crewId" required placeholder="ex: ART-AX4-09">
+        </div>
+        <p style="font-size:.8rem;color:var(--text-muted)">Conturile create aici au rolul Astronaut. Rolurile medicale sunt atribuite de administratorul misiunii.</p>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+            <input type="checkbox" id="terms" required>
+            <label for="terms" style="color: var(--text-muted); cursor: pointer;">Accept termenii și protocoalele de misiune</label>
+        </div>
+        <button type="submit" class="btn-submit">ÎNREGISTRARE CONT</button>
+        <div class="links-row">
+            Ai deja cont? <a href="login.html">Autentifică-te aici</a>
+        </div>
+    </form>
+</div>
+<script src="js/auth.js"></script>
+<script>
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errBox = document.getElementById("errorAlert");
+
+        const userData = {
+            fullName: document.getElementById("fullName").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+            crewId: document.getElementById("crewId").value,
+            role: "ASTRONAUT"
+        };
+
+        try {
+            await window.authService.signup(userData);
+            window.location.href = "index.html";
+        } catch (err) {
+            errBox.textContent = err.message;
+            errBox.style.display = "block";
+        }
+    });
+</script>
+</body>
+</html>

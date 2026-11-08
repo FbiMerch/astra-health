@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Sleep & Recovery</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 1rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .metric-card { background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px; }
+        .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .metric-val { font-size: 1.4rem; font-weight: bold; font-family: var(--font-tech); color: var(--accent-cyan); }
+
+        .chart-wrapper { position: relative; height: 260px; width: 100%; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; background: var(--bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .form-group label { font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+        .form-group input, .form-group select {
+            background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px; border-radius: 4px; font-size: 0.9rem; outline: none;
+        }
+        .btn-action {
+            background: var(--accent-cyan); color: var(--bg-primary); border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; width: fit-content; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.85; }
+
+        .recommendation-item {
+            background: var(--bg-card); padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent-cyan); font-size: 0.85rem;
+        }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li class="active"><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Sleep & Recovery Module</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">
+            ⚠️ NOTIFICARE: Monitorizarea somnului utilizează date biometrice simulate și intrări manuale pentru susținerea ritmului circadian în mediu izolat.
+        </div>
+
+        <!-- NASA HAZARD INFO: ISOLATION & CONFINEMENT -->
+        <div class="panel-box" style="border-left: 4px solid var(--accent-yellow); background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(245,158,11,0.03) 100%);">
+            <div class="panel-title" style="color: var(--accent-yellow);">Context Spațial NASA: Hazardul de Izolare și Confinare (Isolation & Confinement)</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                În misiunile spațiale de lungă durată, lipsa ciclului natural zi-noapte de pe Pământ și spațiile restrânse pot perturba grav <strong>ritmul circadian</strong>, calitatea somnului și starea comportamentală. Monitorizarea riguroasă a odihnei previne acumularea oboselii mentale și menține vigilența echipajului.
+            </p>
+        </div>
+
+        <!-- A. SLEEP OVERVIEW -->
+        <div class="panel-box">
+            <div class="panel-title">Sleep Overview (Ultima Sesiune)</div>
+            <div class="overview-grid" id="sleepOverviewGrid">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+        <!-- B. SLEEP SCHEDULE & C. FATIGUE MONITORING (INPUT FORM) -->
+        <div class="panel-box">
+            <div class="panel-title">Înregistrare Manuală Somn & Oboseală (Daily Log)</div>
+            <form id="sleepLogForm" style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="logSleepDuration">Durată Somn (Ore)</label>
+                        <input type="number" step="0.5" id="logSleepDuration" placeholder="ex: 8.0" min="0" max="16" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="logSleepQuality">Calitatea Somnului</label>
+                        <select id="logSleepQuality">
+                            <option value="Very Poor">Very Poor</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Good" selected>Good</option>
+                            <option value="Excellent">Excellent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="logBedtime">Ora Culcare (UTC)</label>
+                        <input type="time" id="logBedtime" value="22:30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="logWakeTime">Ora Trezire (UTC)</label>
+                        <input type="time" id="logWakeTime" value="06:30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="logInterruptions">Întreruperi În Timpul Nopții</label>
+                        <input type="number" id="logInterruptions" placeholder="ex: 1" min="0" max="10" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="logFatigueLevel">Nivel Oboseală Raportat</label>
+                        <select id="logFatigueLevel">
+                            <option value="Low" selected>Low (Scăzut)</option>
+                            <option value="Moderate">Moderate (Moderat)</option>
+                            <option value="High">High (Ridicat)</option>
+                            <option value="Very High">Very High (Sever)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-action">SALVEAZĂ ÎNREGISTRAREA</button>
+            </form>
+        </div>
+
+        <!-- D. SLEEP & HEALTH CORRELATIONS (CHARTS) -->
+        <div class="panel-box">
+            <div class="panel-title">Corelații Orientative: Durată Somn vs. Puls & Oboseală</div>
+            <div class="chart-wrapper">
+                <canvas id="sleepCorrelationsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- E. RECOVERY RECOMMENDATIONS -->
+        <div class="panel-box">
+            <div class="panel-title">Recomandări Personalizate de Recuperare (HRP Guidelines)</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="sleepRecommendationsList">
+                <!-- Populat din JS -->
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/sleep.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

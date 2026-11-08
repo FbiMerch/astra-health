@@ -1,0 +1,709 @@
+<!-- twin.html -->
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Interactive Digital Twin</title>
+    <!-- Asuming global style.css is linked here, but adding specific Twin styles below -->
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Digital Twin Specific Styles */
+        .twin-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 380px;
+            gap: 20px;
+            height: calc(100vh - 100px);
+            overflow: hidden;
+        }
+
+        @media(max-width: 1200px) {
+            .twin-layout { grid-template-columns: 1fr; height: auto; overflow: auto; }
+        }
+
+        /* Left Panel */
+        .health-score-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px auto;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-cyan) var(--score-deg, 0%), var(--bg-primary) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+        .health-score-inner {
+            width: 100px;
+            height: 100px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .score-val { font-size: 2rem; font-weight: bold; font-family: var(--font-tech, monospace); color: var(--text-main); }
+        .score-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .quick-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .quick-stat-row:hover { background: rgba(0, 240, 255, 0.05); }
+
+        /* Center Panel - Holographic Body */
+        .hologram-container {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(0,240,255,0.05) 0%, transparent 60%);
+        }
+        #digitalTwinSvg {
+            height: 90%;
+            max-height: 800px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 200, 255, 0.3));
+        }
+        .anatomy-layer {
+            fill: rgba(0, 240, 255, 0.02);
+            stroke: var(--border-color);
+            stroke-width: 1.5;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .anatomy-layer:hover {
+            fill: rgba(0, 240, 255, 0.15);
+            stroke: var(--accent-cyan);
+            filter: drop-shadow(0 0 8px var(--accent-cyan));
+        }
+        .anatomy-layer.selected {
+            fill: rgba(0, 240, 255, 0.25);
+            stroke: var(--accent-cyan);
+            stroke-width: 2;
+            filter: drop-shadow(0 0 12px var(--accent-cyan));
+        }
+        /* Status Overrides for SVG */
+        .anatomy-layer.status-red { stroke: var(--accent-red); fill: rgba(239, 68, 68, 0.1); }
+        .anatomy-layer.status-red:hover, .anatomy-layer.status-red.selected { fill: rgba(239, 68, 68, 0.3); filter: drop-shadow(0 0 12px var(--accent-red)); }
+
+        .anatomy-layer.status-yellow { stroke: var(--accent-yellow); fill: rgba(245, 158, 11, 0.1); }
+        .anatomy-layer.status-yellow:hover, .anatomy-layer.status-yellow.selected { fill: rgba(245, 158, 11, 0.3); filter: drop-shadow(0 0 12px var(--accent-yellow)); }
+
+        .hologram-controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Right Panel - Tabs */
+        .system-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .system-icon { font-size: 2.5rem; }
+
+        .twin-tabs { display: flex; gap: 5px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+        .twin-tab {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-family: var(--font-tech, monospace);
+        }
+        .twin-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+        .twin-tab:hover:not(.active) { color: var(--text-main); }
+
+        .tab-content { display: none; height: calc(100% - 140px); overflow-y: auto; padding-right: 5px; }
+        .tab-content.active { display: block; }
+
+        .data-card { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+        .risk-item { border-left: 3px solid var(--accent-orange); padding-left: 10px; margin-bottom: 15px; }
+
+        .btn-action-small { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+        .btn-action-small:hover { background: var(--accent-cyan); color: var(--bg-primary); }
+    </style>
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li class="active"><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+</aside>
+
+<main style="height: 100vh; display: flex; flex-direction: column;">
+    <header style="flex-shrink: 0;">
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV</span> | Interactive Human Digital Twin</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container" style="flex-grow: 1; padding: 20px; overflow: hidden;">
+        <div class="twin-layout">
+
+            <!-- LEFT PANEL: OVERVIEW -->
+            <div class="panel-box" style="height: 100%; overflow-y: auto;">
+                <div class="panel-title">Astronaut Profile</div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 id="dt-astro-name" style="color: var(--text-main); margin-bottom: 5px;">-</h3>
+                    <div id="dt-astro-role" style="font-size: 0.8rem; color: var(--text-muted);">-</div>
+                </div>
+
+                <div class="health-score-ring" id="dt-score-ring">
+                    <div class="health-score-inner">
+                        <span class="score-val" id="dt-score-val">--</span>
+                        <span class="score-label">Health Score</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span id="dt-global-status" class="badge badge-green" style="padding: 5px 12px; font-size: 0.8rem;">STATUS: STABLE</span>
+                </div>
+
+                <div class="panel-title" style="font-size: 0.85rem; border-top: 1px solid var(--border-color); padding-top: 15px;">Quick Indicators</div>
+                <div id="dt-quick-stats">
+                    <!-- Populated by JS -->
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 15px;">
+                    Ultima actualizare: <span id="dt-last-update">Acum</span> (Simulated Data)
+                </div>
+            </div>
+
+            <!-- CENTER PANEL: HOLOGRAPHIC BODY (ANATOMICAL REALISM) -->
+            <div class="panel-box hologram-container">
+                <svg id="digitalTwinSvg" viewBox="0 0 600 1300" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <!-- Filtre High-Tech Scanner -->
+                        <filter id="neon-glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+                            <feGaussianBlur stdDeviation="8" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="neon-glow-red" x="-30%" y="-30%" width="160%" height="160%">
+                            <feGaussianBlur stdDeviation="10" result="blur" />
+                            <feComponentTransfer in="blur" result="glow"><feFuncA type="linear" slope="1.5"/></feComponentTransfer>
+                            <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="neon-glow-yellow" x="-30%" y="-30%" width="160%" height="160%">
+                            <feGaussianBlur stdDeviation="10" result="blur" />
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- 1. SILUETĂ UMANĂ REALISTĂ (Conturul corpului) -->
+                    <!-- Cap, gât, umeri, brațe cu degete, trunchi, șolduri, picioare anatomice -->
+                    <path class="body-outline" d="M300 50 C265 50, 250 85, 250 120 C250 145, 260 160, 275 180 C260 185, 190 200, 160 250 C140 280, 130 330, 130 380 C130 450, 115 520, 100 580 C95 600, 95 650, 90 680 C85 710, 105 720, 115 690 C125 650, 135 590, 145 540 C155 600, 155 700, 145 800 C135 900, 125 1100, 125 1150 C125 1180, 160 1190, 175 1160 C190 1100, 210 950, 225 850 C235 850, 275 860, 300 860 C325 860, 365 850, 375 850 C390 950, 410 1100, 425 1160 C440 1190, 475 1180, 475 1150 C475 1100, 465 900, 455 800 C445 700, 445 600, 455 540 C465 590, 475 650, 485 690 C495 720, 515 710, 510 680 C505 650, 505 600, 500 580 C485 520, 470 450, 470 380 C470 330, 460 280, 440 250 C410 200, 340 185, 325 180 C340 160, 350 145, 350 120 C350 85, 335 50, 300 50 Z" />
+
+                    <!-- 2. SKELETAL SYSTEM (Craniu, Coaste Reale, Bazin, Oase Membre) -->
+                    <g id="system-skeleton" class="anatomy-layer" data-system="skeleton">
+                        <!-- Craniu / Skull -->
+                        <path d="M265 85 C265 65, 335 65, 335 85 C335 115, 320 135, 300 145 C280 135, 265 115, 265 85 Z" />
+                        <path d="M280 100 Q285 95, 290 100 M310 100 Q315 95, 320 100" stroke-width="2" fill="none"/>
+                        <!-- Coloana / Spine -->
+                        <path d="M300 150 Q295 250, 300 450" stroke-width="12" stroke-dasharray="8 6" fill="none" stroke-linecap="round"/>
+                        <!-- Cutia Toracică Realistă (Ribcage) -->
+                        <path d="M300 220 Q240 230, 230 280 M300 220 Q360 230, 370 280" fill="none" stroke-width="4"/>
+                        <path d="M300 250 Q225 260, 220 320 M300 250 Q375 260, 380 320" fill="none" stroke-width="4"/>
+                        <path d="M300 280 Q215 290, 215 360 M300 280 Q385 290, 385 360" fill="none" stroke-width="4"/>
+                        <path d="M300 310 Q215 320, 220 390 M300 310 Q385 320, 380 390" fill="none" stroke-width="4"/>
+                        <path d="M300 340 Q230 350, 235 410 M300 340 Q370 350, 365 410" fill="none" stroke-width="4"/>
+                        <!-- Pelvis anatomic -->
+                        <path d="M245 480 C245 450, 275 440, 300 460 C325 440, 355 450, 355 480 C355 520, 320 540, 300 540 C280 540, 245 520, 245 480 Z" />
+                        <!-- Humerus, Radius, Ulna -->
+                        <path d="M210 230 Q170 350, 160 410 M390 230 Q430 350, 440 410" fill="none" stroke-width="7" stroke-linecap="round"/>
+                        <path d="M160 415 Q140 500, 125 570 M440 415 Q460 500, 475 570" fill="none" stroke-width="5" stroke-linecap="round"/>
+                        <!-- Femur, Tibia, Fibula -->
+                        <path d="M255 520 Q240 680, 245 720 M345 520 Q360 680, 355 720" fill="none" stroke-width="12" stroke-linecap="round"/>
+                        <path d="M245 730 Q240 950, 225 1050 M355 730 Q360 950, 375 1050" fill="none" stroke-width="8" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- 3. CENTRAL NERVOUS SYSTEM (Brain - emisfere, circumvoluțiuni organice) -->
+                    <g id="system-brain" class="anatomy-layer" data-system="brain">
+                        <!-- Emisfere -->
+                        <path d="M300 55 C260 55, 250 80, 255 105 C260 130, 280 135, 300 135 C320 135, 340 130, 345 105 C350 80, 340 55, 300 55 Z" />
+                        <!-- Sulci / Pliuri creier -->
+                        <path d="M260 85 Q285 75, 300 90 Q315 75, 340 85" fill="none" stroke-width="1.5" opacity="0.6"/>
+                        <path d="M265 105 Q285 120, 300 100 Q315 120, 335 105" fill="none" stroke-width="1.5" opacity="0.6"/>
+                        <!-- Trunchi cerebral -->
+                        <path d="M295 135 L295 155 L305 155 L305 135 Z" fill="rgba(0,240,255,0.2)"/>
+                    </g>
+
+                    <!-- 4. CARDIOPULMONARY: LUNGS (Trahee, Lobi pulmonari asimetrici) -->
+                    <g id="system-lungs" class="anatomy-layer" data-system="lungs">
+                        <!-- Trahee -->
+                        <path d="M295 180 L295 220 M305 180 L305 220" fill="none" stroke-width="2"/>
+                        <!-- Plămân Stâng (dreapta ecran - cu incizura cardiacă) -->
+                        <path d="M308 220 C345 210, 370 250, 370 340 C370 365, 340 375, 310 350 C305 320, 300 240, 308 220 Z" />
+                        <!-- Plămân Drept (stânga ecran) -->
+                        <path d="M292 220 C255 210, 230 250, 230 340 C230 365, 260 375, 290 350 C295 320, 300 240, 292 220 Z" />
+                        <!-- Bronhii / Arbore -->
+                        <path d="M330 240 Q350 280, 355 330 M270 240 Q250 280, 245 330" fill="none" stroke-width="1.5" stroke-dasharray="3 3"/>
+                    </g>
+
+                    <!-- 5. CARDIOVASCULAR: HEART (Ventricule, Aortă) -->
+                    <!-- Este desenată PESTE plămâni, asimetrică, orientată spre stânga pacientului -->
+                    <g id="system-heart" class="anatomy-layer" data-system="heart">
+                        <!-- Aorta și Artera Pulmonară (Vasele mari) -->
+                        <path d="M305 260 C305 235, 330 235, 325 260" fill="none" stroke-width="7" stroke-linecap="round"/>
+                        <path d="M295 260 C295 245, 280 245, 285 260" fill="none" stroke-width="5" stroke-linecap="round"/>
+                        <!-- Corpul Inimii (Atrii + Ventricule) -->
+                        <path d="M305 255 C335 250, 355 275, 335 320 C325 345, 290 350, 280 320 C265 285, 285 260, 305 255 Z" />
+                        <!-- Linie EKG subtilă pe inimă -->
+                        <path d="M285 300 L295 300 L305 280 L315 320 L325 295 L335 300" fill="none" stroke-width="1.5" opacity="0.8"/>
+                    </g>
+
+                    <!-- 6. DIGESTIVE / METABOLIC (Ficat, Stomac, Intestine organice) -->
+                    <g id="system-digestive" class="anatomy-layer" data-system="digestive">
+                        <!-- Ficat (Lob mare drept) -->
+                        <path d="M285 360 C220 360, 210 395, 240 410 C300 425, 340 390, 355 375 C355 360, 330 360, 285 360 Z" />
+                        <!-- Stomac -->
+                        <path d="M230 405 C190 405, 190 445, 220 455 C250 465, 265 435, 255 410 Z" />
+                        <!-- Intestine -->
+                        <path d="M245 450 C180 465, 190 535, 245 545 C300 555, 380 545, 370 480 C360 415, 280 435, 245 450 Z" stroke-width="5" stroke-dasharray="10 5" fill="rgba(0,240,255,0.03)"/>
+                    </g>
+
+                    <!-- 7. MUSCULAR SYSTEM (Pectorali, Abdomen, Bicepși, Cvadricepși) -->
+                    <g id="system-muscular" class="anatomy-layer" data-system="muscular">
+                        <!-- Pectorali -->
+                        <path d="M295 220 C235 220, 215 255, 215 285 C215 305, 275 300, 295 290 Z" />
+                        <path d="M305 220 C365 220, 385 255, 385 285 C385 305, 325 300, 305 290 Z" />
+                        <!-- Abdomen (Six-pack natural) -->
+                        <path d="M270 310 C270 310, 295 320, 300 310 C305 320, 330 310, 330 310" fill="none" stroke-width="2"/>
+                        <path d="M265 340 C265 340, 295 350, 300 340 C305 350, 335 340, 335 340" fill="none" stroke-width="2"/>
+                        <path d="M270 370 C270 370, 295 380, 300 370 C305 380, 330 370, 330 370" fill="none" stroke-width="2"/>
+                        <!-- Mușchi Brațe (Deltoid & Biceps) -->
+                        <path d="M190 200 C150 220, 160 280, 175 300 C195 260, 200 230, 190 200 Z" />
+                        <path d="M410 200 C450 220, 440 280, 425 300 C405 260, 400 230, 410 200 Z" />
+                        <!-- Cvadricepși (Coapse) -->
+                        <path d="M235 520 C185 600, 195 700, 230 730 C270 700, 280 600, 270 520 Z" />
+                        <path d="M365 520 C415 600, 405 700, 370 730 C330 700, 320 600, 330 520 Z" />
+                    </g>
+                </svg>
+
+                <!-- Controls (Păstrate exact cum erau) -->
+                <div class="hologram-controls" style="position: absolute; bottom: 20px; z-index: 10; display: flex; gap: 10px; background: rgba(10, 15, 29, 0.8); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <button class="btn-action-small" id="btn-front-view">Scanare Completă</button>
+                    <button class="btn-action-small" id="btn-reset-view">Reset View</button>
+                    <div style="border-left: 1px solid var(--border-color); margin: 0 5px;"></div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display:flex; align-items:center;">
+            Status:
+            <span style="display:inline-block; width:10px; height:10px; background:var(--accent-red); margin: 0 4px 0 8px; border-radius:50%; box-shadow: 0 0 8px var(--accent-red);"></span> Urgent
+            <span style="display:inline-block; width:10px; height:10px; background:var(--accent-yellow); margin: 0 4px 0 8px; border-radius:50%; box-shadow: 0 0 8px var(--accent-yellow);"></span> Monitor
+        </span>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: DETAILS -->
+            <div class="panel-box" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="system-header">
+                    <div class="system-icon" id="dt-system-icon">👤</div>
+                    <div>
+                        <h2 id="dt-system-title" style="margin-bottom: 5px; color: var(--text-main);">Whole Body</h2>
+                        <div id="dt-system-status" style="font-size: 0.85rem; color: var(--text-muted);">Selectați un sistem biologic pentru analiză.</div>
+                    </div>
+                </div>
+
+                <div class="twin-tabs">
+                    <div class="twin-tab active" data-tab="overview">Overview</div>
+                    <div class="twin-tab" data-tab="trends">Health Trends</div>
+                    <div class="twin-tab" data-tab="risks">Risk Factors</div>
+                    <div class="twin-tab" data-tab="recommendations">Recommendations</div>
+                </div>
+
+                <!-- TAB 1: OVERVIEW -->
+                <div class="tab-content active" id="tab-overview">
+                    <div id="dt-overview-content" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">Vă rugăm selectați o regiune anatomică pentru a vizualiza telemetria specifică.</div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: TRENDS -->
+                <div class="tab-content" id="tab-trends">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Istoric măsurători</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-action-small" style="background: var(--accent-cyan); color: var(--bg-primary);">7 Days</button>
+                            <button class="btn-action-small">30 Days</button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="twinTrendChart"></canvas>
+                    </div>
+                    <div id="dt-trend-direction" style="margin-top: 15px; font-size: 0.85rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+                        Trend: -
+                    </div>
+                </div>
+
+                <!-- TAB 3: RISKS -->
+                <div class="tab-content" id="tab-risks">
+                    <div id="dt-risks-content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: RECOMMENDATIONS -->
+                <div class="tab-content" id="tab-recommendations">
+                    <div id="dt-rec-content" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px;" id="dt-module-links">
+                        <!-- Buttons to specific modules based on selected system -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/demo-data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+    /**
+     * ASTRA Health - Interactive Digital Twin Manager
+     */
+    class DigitalTwinManager {
+        constructor() {
+            this.currentAstronautId = "ast-01";
+            this.selectedSystem = null;
+            this.chartInstance = null;
+            this.systemConfig = {
+                "brain": {
+                    name: "Central Nervous System", icon: "🧠", module: "Sleep & Recovery",
+                    metrics: ["sleepDuration", "moodScore"],
+                    risks: [
+                        { name: "Isolation and Confinement", sev: "MEDIUM", desc: "Psychological stress from isolated environment.", action: "Maintain schedule." },
+                        { name: "Circadian Rhythm Disturbance", sev: "LOW", desc: "Artificial lighting impacting sleep.", action: "Monitor sleep quality." }
+                    ],
+                    recs: ["Review sleep schedule.", "Complete daily self-assessment.", "Access MAITRI for cognitive check-in."],
+                    link: "sleep.html"
+                },
+                "heart": {
+                    name: "Cardiovascular System", icon: "🫀", module: "Telemetry",
+                    metrics: ["heartRate", "bloodPressure"],
+                    risks: [
+                        { name: "Fluid Shift", sev: "MEDIUM", desc: "Microgravity induced cephalad fluid shift.", action: "LBNP exercises." },
+                        { name: "Deconditioning", sev: "HIGH", desc: "Reduced cardiac output.", action: "Increase aerobic countermeasures." }
+                    ],
+                    recs: ["Continue continuous ECG monitoring.", "Perform ARED cardiovascular session.", "Check hydration levels."],
+                    link: "telemetry.html"
+                },
+                "lungs": {
+                    name: "Cardiopulmonary System", icon: "🫁", module: "Environment",
+                    metrics: ["spo2", "respiratoryRate"],
+                    risks: [
+                        { name: "Hostile Closed Environment", sev: "HIGH", desc: "Elevated CO2 or particulates.", action: "Check scrubbers." }
+                    ],
+                    recs: ["Monitor ambient O2 levels.", "Review environment dashboard."],
+                    link: "environment.html"
+                },
+                "skeleton": {
+                    name: "Osteo-Skeletal System", icon: "🦴", module: "Exercise",
+                    metrics: ["boneDensity"],
+                    risks: [
+                        { name: "Microgravity Bone Loss", sev: "CRITICAL", desc: "Demineralization due to lack of axial load.", action: "Mandatory resistance training." }
+                    ],
+                    recs: ["Complete 2.5h daily resistance training.", "Review vitamin D and calcium intake.", "Check DEXA scan schedule."],
+                    link: "exercise.html"
+                },
+                "muscular": {
+                    name: "Muscular System", icon: "💪", module: "Exercise",
+                    metrics: ["fatigue"],
+                    risks: [
+                        { name: "Muscle Atrophy", sev: "MEDIUM", desc: "Loss of muscle mass in zero-G.", action: "Resistance training." }
+                    ],
+                    recs: ["Execute flywheel resistance routine.", "Log fatigue levels in assessment."],
+                    link: "exercise.html"
+                },
+                "digestive": {
+                    name: "Metabolic / Digestive", icon: "🍎", module: "Assessment",
+                    metrics: ["nutrition"],
+                    risks: [
+                        { name: "Space Radiation", sev: "LOW", desc: "Metabolic alteration risk.", action: "Standard monitoring." }
+                    ],
+                    recs: ["Log hydration.", "Review dietary intake.", "Report nausea in Emergency Center if acute."],
+                    link: "assessment.html"
+                }
+            };
+            this.init();
+        }
+
+        init() {
+            // Astronaut selector
+            const select = document.getElementById("astronautSelect");
+            if (select && typeof DEMO_DATA !== 'undefined') {
+                DEMO_DATA.astronauts.forEach(ast => {
+                    const opt = document.createElement("option");
+                    opt.value = ast.id;
+                    opt.textContent = `${ast.name} (${ast.role})`;
+                    select.appendChild(opt);
+                });
+                select.addEventListener("change", (e) => {
+                    this.currentAstronautId = e.target.value;
+                    this.refreshAll();
+                });
+            }
+
+            // SVG Interaction
+            document.querySelectorAll(".anatomy-layer").forEach(layer => {
+                layer.addEventListener("click", (e) => {
+                    const systemId = e.currentTarget.getAttribute("data-system");
+                    this.selectSystem(systemId);
+                });
+            });
+
+            // Tabs
+            document.querySelectorAll(".twin-tab").forEach(tab => {
+                tab.addEventListener("click", (e) => {
+                    document.querySelectorAll(".twin-tab").forEach(t => t.classList.remove("active"));
+                    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                    e.currentTarget.classList.add("active");
+                    document.getElementById(`tab-${e.currentTarget.getAttribute("data-tab")}`).classList.add("active");
+                });
+            });
+
+            // Controls
+            document.getElementById("btn-reset-view")?.addEventListener("click", () => this.selectSystem(null));
+
+            this.refreshAll();
+        }
+
+        getAstronautData() {
+            const vitals = DEMO_DATA.vitals?.[this.currentAstronautId] || {};
+            const ast = DEMO_DATA.astronauts.find(a => a.id === this.currentAstronautId) || {};
+            const alerts = JSON.parse(localStorage.getItem(`astra_smart_alerts_${ast.userId}`)) || [];
+            return { vitals, ast, alerts };
+        }
+
+        refreshAll() {
+            const { vitals, ast, alerts } = this.getAstronautData();
+
+            // Left Panel
+            document.getElementById("dt-astro-name").textContent = ast.name || "Unknown";
+            document.getElementById("dt-astro-role").textContent = ast.role || "-";
+
+            // Determine Global Status
+            let globalStatus = "GREEN";
+            let score = 95;
+            const activeAlerts = alerts.filter(a => a.status !== "RESOLVED");
+
+            if (activeAlerts.some(a => a.severity === "CRITICAL") || Object.values(vitals).some(v => v.status === "critical")) {
+                globalStatus = "RED"; score = 65;
+            } else if (activeAlerts.some(a => a.severity === "HIGH" || a.severity === "MEDIUM") || Object.values(vitals).some(v => v.status === "warning")) {
+                globalStatus = "YELLOW"; score = 82;
+            } else if (Object.keys(vitals).length === 0) {
+                globalStatus = "GRAY"; score = 0;
+            }
+
+            const ring = document.getElementById("dt-score-ring");
+            ring.style.setProperty("--score-deg", `${(score/100)*360}deg`);
+            ring.style.setProperty("--accent-cyan", globalStatus === "RED" ? "#ef4444" : (globalStatus === "YELLOW" ? "#f59e0b" : (globalStatus === "GRAY" ? "#8892b0" : "#10b981")));
+            document.getElementById("dt-score-val").textContent = score > 0 ? score : "N/A";
+
+            const badge = document.getElementById("dt-global-status");
+            badge.className = `badge badge-${globalStatus.toLowerCase()}`;
+            badge.textContent = `STATUS: ${globalStatus}`;
+            badge.style.background = `var(--accent-${globalStatus === 'RED'?'red':(globalStatus==='YELLOW'?'yellow':'green')})`;
+
+            // Quick Stats
+            const qsContainer = document.getElementById("dt-quick-stats");
+            qsContainer.innerHTML = `
+            <div class="quick-stat-row" onclick="window.twinManager.selectSystem('heart')"><span>Heart Rate</span> <strong style="color:${vitals.heartRate?.status==='warning'?'var(--accent-yellow)':'var(--accent-cyan)'}">${vitals.heartRate?.value || '-'} ${vitals.heartRate?.unit || ''}</strong></div>
+            <div class="quick-stat-row" onclick="window.twinManager.selectSystem('heart')"><span>Blood Press.</span> <strong>${vitals.bloodPressure?.value || '-'}</strong></div>
+            <div class="quick-stat-row" onclick="window.twinManager.selectSystem('lungs')"><span>SpO2</span> <strong>${vitals.spo2?.value || '-'} ${vitals.spo2?.unit || ''}</strong></div>
+            <div class="quick-stat-row" onclick="window.twinManager.selectSystem('skeleton')"><span>Bone Density</span> <strong style="color:${vitals.boneDensity?.status==='critical'?'var(--accent-red)':'var(--accent-cyan)'}">${vitals.boneDensity?.value || '-'} ${vitals.boneDensity?.unit || ''}</strong></div>
+        `;
+
+            // Reset SVG Highlights
+            document.querySelectorAll(".anatomy-layer").forEach(layer => {
+                layer.classList.remove("status-red", "status-yellow", "selected");
+                const sysId = layer.getAttribute("data-system");
+
+                // Map vitals to SVG coloring
+                let stat = "normal";
+                if (sysId === 'heart' && (vitals.heartRate?.status === 'critical' || vitals.bloodPressure?.status === 'critical')) stat = "red";
+                else if (sysId === 'heart' && (vitals.heartRate?.status === 'warning' || vitals.bloodPressure?.status === 'warning')) stat = "yellow";
+                if (sysId === 'skeleton' && vitals.boneDensity?.status === 'critical') stat = "red";
+                else if (sysId === 'skeleton' && vitals.boneDensity?.status === 'warning') stat = "yellow";
+
+                if (stat === "red") layer.classList.add("status-red");
+                if (stat === "yellow") layer.classList.add("status-yellow");
+            });
+
+            if (this.selectedSystem) {
+                this.selectSystem(this.selectedSystem);
+            } else {
+                this.clearRightPanel();
+            }
+        }
+
+        selectSystem(systemId) {
+            this.selectedSystem = systemId;
+
+            // Handle SVG selection
+            document.querySelectorAll(".anatomy-layer").forEach(l => l.classList.remove("selected"));
+            if (systemId) {
+                const layer = document.getElementById(`system-${systemId}`);
+                if (layer) layer.classList.add("selected");
+                this.populateRightPanel(systemId);
+            } else {
+                this.clearRightPanel();
+            }
+        }
+
+        clearRightPanel() {
+            document.getElementById("dt-system-icon").textContent = "👤";
+            document.getElementById("dt-system-title").textContent = "Whole Body (Select a system)";
+            document.getElementById("dt-system-status").textContent = "Overview mode active.";
+            document.getElementById("dt-overview-content").innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Vă rugăm selectați o regiune anatomică din modelul holografic.</div>`;
+            document.getElementById("dt-risks-content").innerHTML = "";
+            document.getElementById("dt-rec-content").innerHTML = "";
+            document.getElementById("dt-module-links").innerHTML = "";
+            if (this.chartInstance) {
+                this.chartInstance.destroy();
+                this.chartInstance = null;
+            }
+        }
+
+        populateRightPanel(sysId) {
+            const config = this.systemConfig[sysId];
+            if (!config) return;
+            const { vitals } = this.getAstronautData();
+
+            document.getElementById("dt-system-icon").textContent = config.icon;
+            document.getElementById("dt-system-title").textContent = config.name;
+
+            // Determine status for specific system
+            let sysStatus = "GREEN (Stable)";
+            let statColor = "var(--accent-green)";
+            if (sysId === 'heart' && (vitals.heartRate?.status === 'warning' || vitals.bloodPressure?.status === 'warning')) { sysStatus = "YELLOW (Monitoring)"; statColor = "var(--accent-yellow)"; }
+            if (sysId === 'skeleton' && vitals.boneDensity?.status === 'critical') { sysStatus = "RED (Critical)"; statColor = "var(--accent-red)"; }
+            if (sysId === 'skeleton' && vitals.boneDensity?.status === 'warning') { sysStatus = "YELLOW (Monitoring)"; statColor = "var(--accent-yellow)"; }
+
+            document.getElementById("dt-system-status").innerHTML = `<span style="color:${statColor}; font-weight:bold;">${sysStatus}</span>`;
+
+            // 1. Overview Tab
+            let html = '';
+            config.metrics.forEach(m => {
+                const v = vitals[m];
+                if (v) {
+                    html += `<div class="data-card">
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">${m.replace(/([A-Z])/g, ' $1').trim()}</div>
+                            <div style="font-size:1.4rem; font-weight:bold; color:var(--accent-cyan); font-family:monospace;">${v.value} <span style="font-size:0.8rem;">${v.unit}</span></div>
+                         </div>`;
+                } else {
+                    html += `<div class="data-card"><div style="font-size:0.75rem; color:var(--text-muted);">${m}</div><div>No Data Available (Simulated)</div></div>`;
+                }
+            });
+            document.getElementById("dt-overview-content").innerHTML = html;
+
+            // 2. Risks Tab
+            let rHtml = '';
+            config.risks.forEach(r => {
+                const sCol = r.sev === 'CRITICAL' ? 'var(--accent-red)' : (r.sev === 'HIGH' ? 'var(--accent-orange)' : 'var(--accent-yellow)');
+                rHtml += `<div class="risk-item" style="border-left-color: ${sCol};">
+                        <strong style="color: ${sCol}; font-size:0.85rem;">[${r.sev}] ${r.name}</strong>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin: 4px 0;">${r.desc}</p>
+                        <div style="font-size:0.75rem; color:var(--text-main);">Action: ${r.action}</div>
+                      </div>`;
+            });
+            document.getElementById("dt-risks-content").innerHTML = rHtml || "<p>No configured risks.</p>";
+
+            // 3. Recs Tab
+            let recHtml = '';
+            config.recs.forEach(r => {
+                recHtml += `<div style="background: rgba(0,240,255,0.05); padding: 8px; border-radius:4px; font-size:0.85rem; border:1px solid var(--border-color);">✓ ${r}</div>`;
+            });
+            document.getElementById("dt-rec-content").innerHTML = recHtml;
+            document.getElementById("dt-module-links").innerHTML = `<button class="btn-action-small" style="background:var(--bg-secondary);" onclick="window.location.href='${config.link}'">Open ${config.module} Module →</button>`;
+
+            // 4. Trends Tab (Chart.js)
+            this.renderChart(sysId);
+        }
+
+        renderChart(sysId) {
+            const ctx = document.getElementById("twinTrendChart");
+            if (!ctx) return;
+            if (this.chartInstance) this.chartInstance.destroy();
+
+            // Map system to historical data
+            let label = "Measurement";
+            let data = [];
+            let color = "#00f0ff";
+
+            if (sysId === 'heart') { label = "Heart Rate (BPM)"; data = DEMO_DATA.history.heartRate; color = "#ef4444"; }
+            else if (sysId === 'lungs') { label = "SpO2 (%)"; data = DEMO_DATA.history.spo2; color = "#10b981"; }
+            else if (sysId === 'skeleton') { label = "Bone Density (%)"; data = [97, 96.5, 95.8, 95.0, 94.5, 94.2]; color = "#f59e0b"; }
+            else { data = [5,6,5,7,6,6]; color = "#8892b0"; } // generic fallback
+
+            this.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: DEMO_DATA.history.labels,
+                    datasets: [{
+                        label: label + ' (Simulated)',
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#8892b0' }, grid: { color: '#233554' } },
+                        y: { ticks: { color: '#8892b0' }, grid: { color: '#233554' } }
+                    },
+                    plugins: { legend: { labels: { color: '#e2e8f0' } } }
+                }
+            });
+
+            const start = data[0];
+            const end = data[data.length-1];
+            let trend = "Stable";
+            if (end < start) trend = sysId==='heart' ? "Improving (Lower HR)" : "Declining";
+            if (end > start) trend = sysId==='heart' ? "Declining (Higher HR)" : "Improving";
+            document.getElementById("dt-trend-direction").innerHTML = `Trend Analysis: <strong style="color:var(--accent-cyan);">${trend}</strong> over last period.`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        window.twinManager = new DigitalTwinManager();
+    });
+</script>
+</body>
+</html>

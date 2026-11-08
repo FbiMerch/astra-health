@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Health Insights & Risk Center</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111a2e;
+            --bg-card: #16223f;
+            --border-color: #233554;
+            --text-main: #e2e8f0;
+            --text-muted: #8892b0;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --font-tech: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-cyan); font-family: var(--font-tech); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .nav-links li a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); text-decoration: none; border-radius: 6px; transition: all 0.3s ease; font-size: 0.95rem;
+        }
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan);
+        }
+
+        .mode-toggle-box { background: var(--bg-card); padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        .mode-toggle-box label { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-muted); }
+
+        main { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+
+        header {
+            background-color: var(--bg-secondary); padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .mission-info span { color: var(--accent-cyan); font-family: var(--font-tech); }
+        .astronaut-selector select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; outline: none; }
+
+        .dashboard-container { padding: 25px; display: flex; flex-direction: column; gap: 20px; }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); color: var(--accent-yellow);
+            padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-tech);
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .panel-title {
+            font-size: 0.95rem; font-weight: bold; color: var(--text-main);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .chart-controls { display: flex; gap: 8px; }
+        .btn-time {
+            background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted);
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+        }
+        .btn-time.active, .btn-time:hover {
+            background: var(--accent-cyan); color: var(--bg-primary); border-color: var(--accent-cyan); font-weight: bold;
+        }
+        .chart-wrapper { position: relative; height: 240px; width: 100%; }
+    </style>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li class="active"><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span>ARTEMIS-IV LUNAR BASE</span> | Centru Analiză Predictive</div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">
+            ⚠️ DEMO STATIC: scorul, riscurile și graficele nu sunt calculate din telemetrie validată. Nu sunt predicții, clasificări clinice sau recomandări pentru tratament.
+        </div>
+
+        <!-- SECTION 1: HEALTH OVERVIEW & GENERAL SCORE -->
+        <div class="panel-box" style="display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: center;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Health Score · demo</div>
+                <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="110" height="110" viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#233554" stroke-width="3.5" />
+                        <path id="scoreCirclePath" stroke-dasharray="86, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
+                    </svg>
+                    <div style="position: absolute; font-size: 1.6rem; font-weight: bold; font-family: var(--font-tech); color: var(--accent-cyan);" id="healthScoreVal">86/100</div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 1rem; font-weight: bold; color: var(--text-main);">Sumar Stare Biologică & Trenduri</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Status General</div>
+                        <div id="healthStatusVal" style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); margin-top: 4px;">NECLASIFICAT · DEMO</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Trend Sănătate</div>
+                        <div id="healthTrendVal" style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); margin-top: 4px;">INDISPONIBIL</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Riscuri Active</div>
+                        <div id="activeRisksVal" style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); margin-top: 4px;">NEEVALUAT</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: HEALTH TRENDS -->
+        <div class="panel-box">
+            <div class="panel-title">
+                <span>Evoluție Parametri Biologici în Timp</span>
+                <div class="chart-controls">
+                    <button class="btn-time active" data-trendrange="7">7 Zile</button>
+                    <button class="btn-time" data-trendrange="30">30 Zile</button>
+                    <button class="btn-time" data-trendrange="90">90 Zile</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: center;">
+                <div class="chart-wrapper"><canvas id="trendsChart"></canvas></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <strong style="color: var(--text-main); margin-bottom: 5px;">Analiză Tendință:</strong>
+                    <p id="trendSummaryText">Seria afișată este demonstrativă; nu există istoric de măsurători conectat.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: RISK DETECTION -->
+        <div class="panel-box">
+            <div class="panel-title">Sistem de Detecție a Riscurilor (NASA HRP Aligned)</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;" id="riskCardsGrid"></div>
+        </div>
+
+        <!-- SECTION 4: PREDICTIVE FORECAST -->
+        <div class="panel-box">
+                <div class="panel-title">Prognoză</div>
+            <div class="chart-wrapper"><canvas id="predictiveChart"></canvas></div>
+        </div>
+
+        <!-- SECTION 5: RECOMMENDATIONS -->
+        <div class="panel-box">
+            <div class="panel-title">Recomandări medicale</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="recommendationsList"></div>
+        </div>
+
+        <!-- SECTION 6: TIMELINE -->
+        <div class="panel-box">
+            <div class="panel-title">Cronologia Evenimentelor de Sănătate & Riscuri</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; border-left: 2px solid var(--border-color); padding-left: 15px; margin-top: 5px;" id="riskTimelineContainer"></div>
+        </div>
+    </div>
+</main>
+
+<!-- JS Scripts -->
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/insights.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

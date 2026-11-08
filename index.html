@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA Health - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<aside>
+    <div class="logo-area"><h1>⚡ ASTRA HEALTH</h1></div>
+    <ul class="nav-links">
+        <li class="active"><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="twin.html">🧬 Digital Twin</a></li>
+        <li><a href="telemetry.html">📈 Telemetry</a></li>
+        <li><a href="ai.html">🤖 AI Companion</a></li>
+        <li><a href="insights.html">🛡️ Insights & Risks</a></li>
+        <li><a href="assessment.html">📝 Self-Assessment</a></li>
+        <li><a href="sleep.html">🌙 Sleep & Recovery</a></li>
+        <li><a href="exercise.html">💪 Exercise & Countermeasures</a></li>
+        <li><a href="environment.html">🌍 Environment Monitoring</a></li>
+        <li><a href="procedures.html">🩺 Guided Procedures</a></li>
+        <li><a href="checklist.html">✅ Daily Checklist</a></li>
+        <li><a href="records.html">📋 Medical Records</a></li>
+        <li><a href="offline.html">🛰️ Mission Autonomy</a></li>
+        <li><a href="emergency.html">🚨 Emergency Center</a></li>
+        <li><a href="alerts.html">🔔 Smart Alerts</a></li>
+        <li><a href="medical-center.html">🩺 Medical Operations</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+    <div class="mode-toggle-box">
+        <label><span>API Mode · Dashboard API</span><input type="checkbox" id="apiModeToggle"></label>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="mission-info">Misiune: <span id="missionName">ARTEMIS-IV</span> | Ziua <span id="missionDay">14</span></div>
+        <div class="astronaut-selector"><select id="astronautSelect"></select></div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="disclaimer-banner">⚠️ NOTIFICARE: Date simulate pentru hackathon.</div>
+
+        <!-- WIDGET INTEGRAT: Smart Alerts & Active Warnings -->
+        <div class="panel-box" id="dashboardAlertsWidget" style="border-left: 4px solid var(--accent-orange, #f97316); margin-bottom: 5px;">
+            <div class="panel-title">
+                <span>🔔 Smart Alerts & Active Warnings</span>
+                <a href="alerts.html" style="font-size: 0.8rem; color: var(--accent-cyan, #00f0ff); text-decoration: none;">Centru Alerte →</a>
+            </div>
+            <div id="dashboardAlertsContent" style="font-size: 0.85rem; color: var(--text-muted, #8892b0); display: flex; flex-direction: column; gap: 8px;">
+                Se verifică starea alertelor de misiune...
+            </div>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid"></div>
+
+        <div class="core-grid" style="margin-top: 20px;">
+            <div class="panel-box">
+                <div class="panel-title">Digital Twin (Preview)</div>
+                <div class="twin-viewer" style="height: 220px;">
+                    <svg width="120" height="200" viewBox="0 0 160 280">
+                        <circle cx="80" cy="35" r="16" fill="rgba(0,240,255,0.1)" stroke="#00f0ff" stroke-width="1.5"/>
+                        <path d="M60 55 L100 55 L110 130 L80 150 L50 130 Z" fill="rgba(245,158,11,0.05)" stroke="#f59e0b" stroke-width="1.5"/>
+                        <circle cx="75" cy="88" r="8" fill="#10b981"/>
+                    </svg>
+                    <a href="twin.html" style="color: var(--accent-cyan, #00f0ff); font-size: 0.8rem; margin-top: 10px; text-decoration: none;">Deschide Analiza Detaliată →</a>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-title">
+                    <span>Telemetrie Activă</span>
+                    <div class="chart-controls">
+                        <button class="btn-time active" data-range="1h">1H</button>
+                        <button class="btn-time" data-range="6h">6H</button>
+                    </div>
+                </div>
+                <div class="chart-wrapper" style="height: 180px;">
+                    <canvas id="vitalsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-title">Alerte Misiune</div>
+                <div class="alerts-list" id="alertsList"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+<!-- Script pentru popularea widgetului de Smart Alerts în Dashboard -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const astronautId = "ast-01";
+        const stored = localStorage.getItem(`astra_smart_alerts_${astronautId}`);
+        const container = document.getElementById("dashboardAlertsContent");
+        if (!stored && container) {
+            container.textContent = "Nicio alertă salvată local. Acest lucru nu confirmă că toți parametrii sunt nominali.";
+            return;
+        }
+
+        if (stored && container) {
+            try {
+                const alerts = JSON.parse(stored).filter(a => a.status !== "RESOLVED");
+                const criticalOrHigh = alerts.filter(a => a.severity === "CRITICAL" || a.severity === "HIGH");
+
+                if (criticalOrHigh.length > 0) {
+                    container.innerHTML = "";
+                    criticalOrHigh.forEach(alt => {
+                        const div = document.createElement("div");
+                        div.style.cssText = "background: var(--bg-card, #16223f); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border-color, #233554); display: flex; justify-content: space-between; align-items: center;";
+                        const title = document.createElement("span");
+                        const severity = document.createElement("strong");
+                        severity.style.color = "var(--accent-red, #ef4444)";
+                        severity.textContent = `[${alt.severity}] `;
+                        title.append(severity, document.createTextNode(alt.title || "Alertă"));
+                        const link = document.createElement("a");
+                        link.href = "alerts.html";
+                        link.style.cssText = "font-size:.75rem;color:var(--accent-cyan,#00f0ff);text-decoration:none";
+                        link.textContent = "Detalii";
+                        div.append(title, link);
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.textContent = "Nu există alerte critical/high în jurnalul local. Absența alertelor nu confirmă o stare nominală.";
+                }
+            } catch (e) {
+                container.innerHTML = `Erore la citirea alertelor active.`;
+            }
+        }
+    });
+</script>
+<script src="js/auth.js"></script>
+</body>
+</html>
